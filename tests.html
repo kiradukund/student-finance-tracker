@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Validator Tests</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 24px; background: #f8fafc; }
+    h1 { margin-bottom: 24px; color: #1e293b; }
+    h2 { margin: 24px 0 8px; color: #2563eb; font-size: 1rem; }
+    .pass {
+      background: #dcfce7; color: #16a34a;
+      padding: 8px 12px; border-radius: 4px;
+      margin-bottom: 6px; font-size: 0.9rem;
+    }
+    .fail {
+      background: #fee2e2; color: #dc2626;
+      padding: 8px 12px; border-radius: 4px;
+      margin-bottom: 6px; font-size: 0.9rem;
+    }
+    #summary {
+      margin-top: 24px; font-weight: bold; font-size: 1.1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Validator Tests — Student Finance Tracker</h1>
+  <div id="results"></div>
+  <div id="summary"></div>
+
+  <script type="module">
+    import {
+      validateDescription,
+      validateAmount,
+      validateDate,
+      validateCategory,
+      validateNoDuplicateWords
+    } from './scripts/validators.js';
+
+    let passed = 0;
+    let failed = 0;
+    const results = document.getElementById('results');
+
+    function assert(label, condition) {
+      const div = document.createElement('div');
+      if (condition) {
+        div.className = 'pass';
+        div.textContent = 'PASS: ' + label;
+        passed++;
+      } else {
+        div.className = 'fail';
+        div.textContent = 'FAIL: ' + label;
+        failed++;
+      }
+      results.appendChild(div);
+    }
+
+    function heading(text) {
+      const h = document.createElement('h2');
+      h.textContent = text;
+      results.appendChild(h);
+    }
+
+    // ---- DESCRIPTION TESTS ----
+    heading('Description Validator');
+    assert('Valid: "Lunch at cafeteria"',
+      validateDescription('Lunch at cafeteria').valid === true);
+    assert('Valid: single word "Lunch"',
+      validateDescription('Lunch').valid === true);
+    assert('Invalid: empty string',
+      validateDescription('').valid === false);
+    assert('Invalid: leading space " Lunch"',
+      validateDescription(' Lunch').valid === false);
+    assert('Invalid: trailing space "Lunch "',
+      validateDescription('Lunch ').valid === false);
+    assert('Invalid: duplicate word "the the cafeteria"',
+      validateDescription('the the cafeteria').valid === false);
+
+    // ---- AMOUNT TESTS ----
+    heading('Amount Validator');
+    assert('Valid: "12.50"',
+      validateAmount('12.50').valid === true);
+    assert('Valid: "0"',
+      validateAmount('0').valid === true);
+    assert('Valid: "100"',
+      validateAmount('100').valid === true);
+    assert('Invalid: empty string',
+      validateAmount('').valid === false);
+    assert('Invalid: "12.555" (3 decimal places)',
+      validateAmount('12.555').valid === false);
+    assert('Invalid: "-5" (negative)',
+      validateAmount('-5').valid === false);
+    assert('Invalid: "abc"',
+      validateAmount('abc').valid === false);
+
+    // ---- DATE TESTS ----
+    heading('Date Validator');
+    assert('Valid: "2025-09-29"',
+      validateDate('2025-09-29').valid === true);
+    assert('Valid: "2025-01-01"',
+      validateDate('2025-01-01').valid === true);
+    assert('Invalid: empty string',
+      validateDate('').valid === false);
+    assert('Invalid: "2025-13-01" (month 13)',
+      validateDate('2025-13-01').valid === false);
+    assert('Invalid: "2025-00-01" (month 00)',
+      validateDate('2025-00-01').valid === false);
+    assert('Invalid: "25-09-29" (wrong year format)',
+      validateDate('25-09-29').valid === false);
+
+    // ---- CATEGORY TESTS ----
+    heading('Category Validator');
+    assert('Valid: "Food"',
+      validateCategory('Food').valid === true);
+    assert('Valid: "Bus Pass"',
+      validateCategory('Bus Pass').valid === true);
+    assert('Valid: "Out-of-Town"',
+      validateCategory('Out-of-Town').valid === true);
+    assert('Invalid: empty string',
+      validateCategory('').valid === false);
+    assert('Invalid: "Food!" (special character)',
+      validateCategory('Food!').valid === false);
+    assert('Invalid: "123Food" (starts with number)',
+      validateCategory('123Food').valid === false);
+
+    // ---- ADVANCED: DUPLICATE WORD TESTS ----
+    heading('Advanced: Duplicate Word Detector');
+    assert('Valid: "Lunch at the cafeteria"',
+      validateNoDuplicateWords('Lunch at the cafeteria').valid === true);
+    assert('Invalid: "the the cafeteria"',
+      validateNoDuplicateWords('the the cafeteria').valid === false);
+    assert('Invalid: "at at lunch"',
+      validateNoDuplicateWords('at at lunch').valid === false);
+    assert('Case-insensitive: "The the cafeteria"',
+      validateNoDuplicateWords('The the cafeteria').valid === false);
+
+    // ---- SUMMARY ----
+    const summary = document.getElementById('summary');
+    summary.textContent = `Results: ${passed} passed, ${failed} failed out of ${passed + failed} tests.`;
+    summary.style.color = failed === 0 ? '#16a34a' : '#dc2626';
+
+  </script>
+</body>
+</html>
