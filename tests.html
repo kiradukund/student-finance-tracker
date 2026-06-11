@@ -37,6 +37,8 @@
       validateNoDuplicateWords
     } from './scripts/validators.js';
 
+    import { compileRegex, highlight } from './scripts/search.js';
+
     let passed = 0;
     let failed = 0;
     const results = document.getElementById('results');
@@ -135,6 +137,19 @@
       validateNoDuplicateWords('The the cafeteria').valid === false);
 
     // ---- SUMMARY ----
+    // ---- SEARCH TESTS ----
+    heading('Search: compileRegex and highlight');
+    assert('Valid regex "food" compiles successfully',
+      compileRegex('food') !== null);
+    assert('Invalid regex "[invalid" returns null',
+      compileRegex('[invalid') === null);
+    assert('Empty string returns null',
+      compileRegex('') === null);
+    assert('highlight wraps match in mark tag',
+      highlight('Lunch at cafeteria', /lunch/i).includes('<mark>'));
+    assert('highlight with null regex returns escaped text',
+      highlight('Lunch', null) === 'Lunch');
+
     const summary = document.getElementById('summary');
     summary.textContent = `Results: ${passed} passed, ${failed} failed out of ${passed + failed} tests.`;
     summary.style.color = failed === 0 ? '#16a34a' : '#dc2626';
