@@ -18,6 +18,7 @@ import {
 
 import { renderTable } from './ui.js';
 import { compileRegex } from './search.js';
+import { computeStats, renderChart, updateBudgetStatus } from './stats.js';
 
 // --- Track edit mode and sort state ---
 let editingId = null;
@@ -42,6 +43,22 @@ function showStatus(message, isError = false) {
 }
 
 // --- Re-render table with current sort and search ---
+// --- Refresh dashboard stats ---
+function refreshStats() {
+  const records = getRecords();
+  const stats = computeStats(records);
+
+  document.getElementById('stat-total-records').textContent = stats.totalCount;
+  document.getElementById('stat-total-spent').textContent = '$' + stats.totalAmount.toFixed(2);
+  document.getElementById('stat-top-category').textContent = stats.topCategory;
+  document.getElementById('stat-last7').textContent = '$' + stats.last7Total.toFixed(2);
+
+  renderChart(stats.last7);
+
+  const cap = parseFloat(localStorage.getItem('app:cap') || '0');
+  updateBudgetStatus(stats.totalAmount, cap);
+}
+
 function refreshTable() {
   const sorted = sortRecords(sortField, sortDirection);
   const searchInput = document.getElementById('search-input').value;
@@ -66,6 +83,7 @@ function refreshTable() {
     : sorted;
 
   renderTable(filtered, currentRegex);
+  refreshStats();
 }
 
 // --- Validate form fields ---
@@ -196,3 +214,28 @@ document.getElementById('case-toggle').addEventListener('change', refreshTable);
 
 // --- Initial render ---
 refreshTable();
+refreshStats();
+
+document.getElementById('save-settings').addEventListener('click', () => {
+  const cap = parseFloat(document.getElementById('spending-cap').value) || 0;
+  const eur = document.getElementById('eur-rate').value;
+  const gbp = document.getElementById('gbp-rate').value;
+  localStorage.setItem('app:cap', cap);
+  localStorage.setItem('app:eur', eur);
+  localStorage.setItem('app:gbp', gbp);
+  const statusEl = document.getElementById('form-status');
+  statusEl.textContent = 'Settings saved!';
+  setTimeout(() => { statusEl.textContent = ''; }, 3000);
+  refreshStats();
+});
+
+function loadSettings() {
+  const cap = localStorage.getItem('app:cap');
+  const eur = localStorage.getItem('app:eur');
+  const gbp = localStorage.getItem('app:gbp');
+  if (cap) document.getElementById('spending-cap').value = cap;
+  if (eur) document.getElementById('eur-rate').value = eur;
+  if (gbp) document.getElementById('gbp-rate').value = gbp;
+}
+
+loadSettings();
