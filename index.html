@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Finance Tracker</title>
+  <link rel="stylesheet" href="styles/main.css" />
+</head>
+<body>
+
+  <!-- Skip link: must be first element in body -->
+  <a href="#main" class="skip-link">Skip to main content</a>
+
+  <!-- HEADER -->
+  <header>
+    <h1>Student Finance Tracker</h1>
+  </header>
+
+  <!-- NAVIGATION -->
+  <nav aria-label="Main navigation">
+    <ul>
+      <li><a href="#about">About</a></li>
+      <li><a href="#dashboard">Dashboard</a></li>
+      <li><a href="#records">Records</a></li>
+      <li><a href="#add-expense">Add Expense</a></li>
+      <li><a href="#settings">Settings</a></li>
+    </ul>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main id="main">
+
+    <!-- ABOUT SECTION -->
+    <section id="about" aria-labelledby="about-heading">
+      <h2 id="about-heading">About</h2>
+      <p>Welcome to your Student Finance Tracker. Track your expenses and manage your budget.</p>
+      <p>Built by <strong>IRADUKUNDA CYUSA Kevin</strong></p>
+      <p>GitHub: <a href="https://github.com/kiradukund">kiradukund</a></p>
+      <p>Email: <a href="mailto:k.iradukund@alustudent.com">k.iradukund@alustudent.com</a></p>
+    </section>
+
+    <!-- DASHBOARD SECTION -->
+    <section id="dashboard" aria-labelledby="dashboard-heading">
+      <h2 id="dashboard-heading">Dashboard</h2>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3>Total Records</h3>
+          <p id="stat-total-records">0</p>
+        </div>
+        <div class="stat-card">
+          <h3>Total Spent</h3>
+          <p id="stat-total-spent">$0.00</p>
+        </div>
+        <div class="stat-card">
+          <h3>Top Category</h3>
+          <p id="stat-top-category">--</p>
+        </div>
+        <div class="stat-card">
+          <h3>Last 7 Days</h3>
+          <p id="stat-last7">$0.00</p>
+        </div>
+      </div>
+
+      <!-- 7-day chart placeholder -->
+      <div id="chart" aria-label="7-day spending trend chart">
+        <p>Chart will appear here</p>
+      </div>
+
+      <!-- ARIA live regions -->
+      <div id="budget-status" aria-live="polite" aria-atomic="true"></div>
+      <div id="cap-warning" aria-live="assertive" aria-atomic="true" role="alert"></div>
+
+    </section>
+
+    <!-- RECORDS SECTION -->
+    <section id="records" aria-labelledby="records-heading">
+      <h2 id="records-heading">Records</h2>
+
+      <div class="records-controls">
+        <label for="search-input">Search records:</label>
+        <input type="text" id="search-input" placeholder="Type a search pattern..." />
+        <label>
+          <input type="checkbox" id="case-toggle" />
+          Case-insensitive
+        </label>
+        <div class="sort-buttons">
+          <button type="button" id="sort-date">Sort by Date</button>
+          <button type="button" id="sort-amount">Sort by Amount</button>
+          <button type="button" id="sort-description">Sort by Description</button>
+        </div>
+      </div>
+
+      <div id="search-error" role="status" aria-live="polite"></div>
+
+      <table>
+        <caption>Expense Records</caption>
+        <thead>
+          <tr>
+            <th scope="col">Description</th>
+            <th scope="col">Amount</th>
+            <th scope="col">Category</th>
+            <th scope="col">Date</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="records-tbody">
+          <!-- Records will be inserted here by JavaScript -->
+        </tbody>
+      </table>
+
+    </section>
+
+    <!-- ADD/EDIT FORM SECTION -->
+    <section id="add-expense" aria-labelledby="form-heading">
+      <h2 id="form-heading">Add Expense</h2>
+
+      <form id="expense-form" novalidate>
+
+        <div class="form-group">
+          <label for="description">Description</label>
+          <input type="text" id="description" name="description" required />
+          <span class="error-msg" id="description-error" aria-live="assertive"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="amount">Amount (USD)</label>
+          <input type="text" id="amount" name="amount" required />
+          <span class="error-msg" id="amount-error" aria-live="assertive"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="category">Category</label>
+          <select id="category" name="category">
+            <option value="Food">Food</option>
+            <option value="Books">Books</option>
+            <option value="Transport">Transport</option>
+            <option value="Entertainment">Entertainment</option>
+            <option value="Fees">Fees</option>
+            <option value="Other">Other</option>
+          </select>
+          <span class="error-msg" id="category-error" aria-live="assertive"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="date">Date (YYYY-MM-DD)</label>
+          <input type="text" id="date" name="date" placeholder="2025-09-29" required />
+          <span class="error-msg" id="date-error" aria-live="assertive"></span>
+        </div>
+
+        <div id="form-status" role="status" aria-live="polite"></div>
+
+        <button type="submit" id="submit-btn">Add Expense</button>
+
+      </form>
+    </section>
+
+    <!-- SETTINGS SECTION -->
+    <section id="settings" aria-labelledby="settings-heading">
+      <h2 id="settings-heading">Settings</h2>
+
+      <div class="form-group">
+        <label for="eur-rate">EUR Rate (1 USD =)</label>
+        <input type="text" id="eur-rate" name="eur-rate" value="0.92" />
+      </div>
+
+      <div class="form-group">
+        <label for="gbp-rate">GBP Rate (1 USD =)</label>
+        <input type="text" id="gbp-rate" name="gbp-rate" value="0.79" />
+      </div>
+
+      <div class="form-group">
+        <label for="spending-cap">Spending Cap (USD)</label>
+        <input type="text" id="spending-cap" name="spending-cap" value="500" />
+      </div>
+
+      <button type="button" id="save-settings">Save Settings</button>
+
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>Student Finance Tracker &copy; 2025 IRADUKUNDA CYUSA Kevin</p>
+    <p>
+      <a href="mailto:k.iradukund@alustudent.com">k.iradukund@alustudent.com</a> |
+      <a href="https://github.com/kiradukund">GitHub</a>
+    </p>
+  </footer>
+
+  <script type="module" src="scripts/main.js"></script>
+
+</body>
+</html>
