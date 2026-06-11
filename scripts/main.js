@@ -1,5 +1,5 @@
 // main.js
-// Entry point — wires form validation to the UI
+// Entry point — wires form, state, ui, search together
 
 import {
   validateDescription,
@@ -8,31 +8,67 @@ import {
   validateCategory
 } from './validators.js';
 
-// --- Helper: show or clear an error message ---
+import {
+  getRecords,
+  addRecord,
+  updateRecord,
+  deleteRecord,
+  sortRecords
+} from './state.js';
+
+import { renderTable } from './ui.js';
+import { compileRegex } from './search.js';
+
+// --- Track edit mode and sort state ---
+let editingId = null;
+let sortField = 'date';
+let sortDirection = 'desc';
+let currentRegex = null;
+
+// --- Helper: show or clear error message ---
 function showError(fieldId, message) {
   const el = document.getElementById(fieldId + '-error');
-  if (el) {
-    el.textContent = message;
-  }
-}
-
-function clearError(fieldId) {
-  const el = document.getElementById(fieldId + '-error');
-  if (el) {
-    el.textContent = '';
-  }
+  if (el) el.textContent = message;
 }
 
 // --- Helper: show form status message ---
-function showStatus(message) {
+function showStatus(message, isError = false) {
   const el = document.getElementById('form-status');
   if (el) {
     el.textContent = message;
+    el.style.color = isError ? '#dc2626' : '#16a34a';
     setTimeout(() => { el.textContent = ''; }, 3000);
   }
 }
 
-// --- Validate all fields, return true if all pass ---
+// --- Re-render table with current sort and search ---
+function refreshTable() {
+  const sorted = sortRecords(sortField, sortDirection);
+  const searchInput = document.getElementById('search-input').value;
+  const caseToggle = document.getElementById('case-toggle').checked;
+  const flags = caseToggle ? 'i' : '';
+  currentRegex = compileRegex(searchInput, flags);
+
+  const searchError = document.getElementById('search-error');
+  if (searchInput && !currentRegex) {
+    searchError.textContent = 'Invalid regex pattern.';
+  } else {
+    searchError.textContent = '';
+  }
+
+  const filtered = currentRegex
+    ? sorted.filter(r =>
+        currentRegex.test(r.description) ||
+        currentRegex.test(r.category) ||
+        currentRegex.test(r.date) ||
+        currentRegex.test(String(r.amount))
+      )
+    : sorted;
+
+  renderTable(filtered, currentRegex);
+}
+
+// --- Validate form fields ---
 function validateForm() {
   const description = document.getElementById('description').value;
   const amount = document.getElementById('amount').value;
@@ -52,43 +88,111 @@ function validateForm() {
   return d.valid && a.valid && dt.valid && c.valid;
 }
 
-// --- Live validation on input (clears errors as user types) ---
+// --- Live validation on input ---
 document.getElementById('description').addEventListener('input', () => {
-  const val = document.getElementById('description').value;
-  const result = validateDescription(val);
+  const result = validateDescription(document.getElementById('description').value);
   showError('description', result.message);
 });
 
 document.getElementById('amount').addEventListener('input', () => {
-  const val = document.getElementById('amount').value;
-  const result = validateAmount(val);
+  const result = validateAmount(document.getElementById('amount').value);
   showError('amount', result.message);
 });
 
 document.getElementById('date').addEventListener('input', () => {
-  const val = document.getElementById('date').value;
-  const result = validateDate(val);
+  const result = validateDate(document.getElementById('date').value);
   showError('date', result.message);
 });
 
 document.getElementById('category').addEventListener('change', () => {
-  const val = document.getElementById('category').value;
-  const result = validateCategory(val);
+  const result = validateCategory(document.getElementById('category').value);
   showError('category', result.message);
 });
 
-// --- Form submit handler ---
+// --- Form submit: add or update record ---
 document.getElementById('expense-form').addEventListener('submit', (e) => {
   e.preventDefault();
-
-  const isValid = validateForm();
-
-  if (!isValid) {
-    showStatus('Please fix the errors above.');
+  if (!validateForm()) {
+    showStatus('Please fix the errors above.', true);
     return;
   }
 
-  // Form passed — we will add record logic in M4
-  showStatus('Expense added successfully!');
+  const data = {
+    description: document.getElementById('description').value,
+    amount: document.getElementById('amount').value,
+    category: document.getElementById('category').value,
+    date: document.getElementById('date').value
+  };
+
+  if (editingId) {
+    updateRecord(editingId, data);
+    editingId = null;
+    document.getElementById('submit-btn').textContent = 'Add Expense';
+    document.getElementById('form-heading').textContent = 'Add Expense';
+    showStatus('Record updated successfully!');
+  } else {
+    addRecord(data);
+    showStatus('Expense added successfully!');
+  }
+
   document.getElementById('expense-form').reset();
+  refreshTable();
 });
+
+// --- Edit and Delete buttons (event delegation) ---
+document.getElementById('records-tbody').addEventListener('click', (e) => {
+  const editBtn = e.target.closest('.edit-btn');
+  const deleteBtn = e.target.closest('.delete-btn');
+
+  if (editBtn) {
+    const id = editBtn.dataset.id;
+    const record = getRecords().find(r => r.id === id);
+    if (!record) return;
+
+    document.getElementById('description').value = record.description;
+    document.getElementById('amount').value = record.amount;
+    document.getElementById('category').value = record.category;
+    document.getElementById('date').value = record.date;
+
+    editingId = id;
+    document.getElementById('submit-btn').textContent = 'Update Expense';
+    document.getElementById('form-heading').textContent = 'Edit Expense';
+    document.getElementById('add-expense').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  if (deleteBtn) {
+    const id = deleteBtn.dataset.id;
+    const record = getRecords().find(r => r.id === id);
+    if (!record) return;
+    if (confirm(`Delete "${record.description}"?`)) {
+      deleteRecord(id);
+      showStatus('Record deleted.');
+      refreshTable();
+    }
+  }
+});
+
+// --- Sort buttons ---
+function setSortButton(field) {
+  if (sortField === field) {
+    sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortField = field;
+    sortDirection = 'asc';
+  }
+  refreshTable();
+}
+
+document.getElementById('sort-date')
+  .addEventListener('click', () => setSortButton('date'));
+document.getElementById('sort-amount')
+  .addEventListener('click', () => setSortButton('amount'));
+document.getElementById('sort-description')
+  .addEventListener('click', () => setSortButton('description'));
+
+// --- Live search ---
+document.getElementById('search-input').addEventListener('input', refreshTable);
+document.getElementById('case-toggle').addEventListener('change', refreshTable);
+
+// --- Initial render ---
+refreshTable();
