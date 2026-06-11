@@ -176,6 +176,19 @@
 
       <button type="button" id="save-settings">Save Settings</button>
 
+      <hr style="margin:24px 0;" />
+      <h3>Data</h3>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;">
+        <button type="button" id="export-btn">Export JSON</button>
+        <label style="display:inline-block;">
+          <span style="background:#2563eb;color:white;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:0.9rem;">
+            Import JSON
+          </span>
+          <input type="file" id="import-input" accept=".json" style="display:none;" />
+        </label>
+      </div>
+      <div id="import-status" role="status" aria-live="polite" style="margin-top:8px;font-size:0.9rem;"></div>
+
     </section>
 
   </main>

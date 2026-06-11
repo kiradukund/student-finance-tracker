@@ -2,8 +2,12 @@
 // Manages the in-memory records array
 // localStorage will be added in M6
 
-let records = [];
-let nextId = 1;
+import { saveRecords, loadRecords } from './storage.js';
+
+let records = loadRecords();
+let nextId = records.length > 0
+  ? Math.max(...records.map(r => parseInt(r.id.replace('txn_', '')))) + 1
+  : 1;
 
 function padId(n) {
   return 'txn_' + String(n).padStart(4, '0');
@@ -25,6 +29,7 @@ export function addRecord(data) {
     updatedAt: now
   };
   records.push(record);
+  saveRecords(records);
   return record;
 }
 
@@ -40,11 +45,21 @@ export function updateRecord(id, data) {
     date: data.date,
     updatedAt: now
   };
+  saveRecords(records);
   return records[index];
 }
 
 export function deleteRecord(id) {
   records = records.filter(r => r.id !== id);
+  saveRecords(records);
+}
+
+export function replaceAllRecords(newRecords) {
+  records = newRecords;
+  nextId = records.length > 0
+    ? Math.max(...records.map(r => parseInt(r.id.replace('txn_', '')))) + 1
+    : 1;
+  saveRecords(records);
 }
 
 export function sortRecords(field, direction) {

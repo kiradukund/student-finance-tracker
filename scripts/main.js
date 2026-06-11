@@ -17,6 +17,8 @@ import {
 } from './state.js';
 
 import { renderTable } from './ui.js';
+import { validateImportData } from './storage.js';
+import { replaceAllRecords } from './state.js';
 import { compileRegex } from './search.js';
 import { computeStats, renderChart, updateBudgetStatus } from './stats.js';
 
@@ -239,3 +241,43 @@ function loadSettings() {
 }
 
 loadSettings();
+
+// --- Export JSON ---
+document.getElementById('export-btn').addEventListener('click', () => {
+  const data = JSON.stringify(getRecords(), null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'finance-tracker-export.json';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+// --- Import JSON ---
+document.getElementById('import-input').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById('import-status');
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    try {
+      const parsed = JSON.parse(event.target.result);
+      const validation = validateImportData(parsed);
+      if (!validation.valid) {
+        statusEl.style.color = '#dc2626';
+        statusEl.textContent = validation.message;
+        return;
+      }
+      replaceAllRecords(parsed);
+      refreshTable();
+      statusEl.style.color = '#16a34a';
+      statusEl.textContent = `Import successful: ${parsed.length} records loaded.`;
+    } catch {
+      statusEl.style.color = '#dc2626';
+      statusEl.textContent = 'Import failed: file is not valid JSON.';
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
