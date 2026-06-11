@@ -281,3 +281,16 @@ document.getElementById('import-input').addEventListener('change', (e) => {
   reader.readAsText(file);
   e.target.value = '';
 });
+// --- Escape key cancels edit mode ---
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && editingId) {
+    editingId = null;
+    document.getElementById('expense-form').reset();
+    document.getElementById('submit-btn').textContent = 'Add Expense';
+    document.getElementById('form-heading').textContent = 'Add Expense';
+    showError('description', '');
+    showError('amount', '');
+    showError('date', '');
+    showError('category', '');
+  }
+});
