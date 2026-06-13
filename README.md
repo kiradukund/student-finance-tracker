@@ -95,7 +95,7 @@ To run tests: open `tests.html` in the browser using Live Server.
 
 ## Demo Video
 
-[Unlisted YouTube link — add after recording]
+https://drive.google.com/file/d/1AIi2uI9SRFX4Bs_S_VtKq0eh1Xh1bQ3L/view?usp=sharing
 
 ---
 
